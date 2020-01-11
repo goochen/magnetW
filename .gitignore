@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Compiled class file
 *.class
 
@@ -21,4 +22,20 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 target
+=======
+.DS_Store
+dist/electron/*
+dist/web/*
+build/*
+!build/icons
+node_modules/
+npm-debug.log
+npm-debug.log.*
+thumbs.db
+!.gitkeep
+workspace.xml
+src/dist
+Project_Default.xml
+package-lock.json
+>>>>>>> 5524ebf41c55316f8b069d81a440800c184f5a54
 .idea
