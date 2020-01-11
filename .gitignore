@@ -39,3 +39,5 @@ Project_Default.xml
 package-lock.json
 >>>>>>> 5524ebf41c55316f8b069d81a440800c184f5a54
 .idea
+scripts/filter-data/.temp
+build/icons/.icns.iconset

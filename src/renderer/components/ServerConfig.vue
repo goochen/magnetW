@@ -23,29 +23,42 @@
         </el-row>
       </tooltip-form-item>
       <div v-show="!config.cloud">
+        <el-form-item label="服务状态">
+          <div v-if="appInfo.server" class="server-status-success">
+            <span>IP: {{appInfo.server.ip}}</span>
+            <span class="server-status-success-value">端口: {{appInfo.server.port}}</span>
+          </div>
+          <div v-else class="server-status-error">{{appInfo.server.message||'服务启动失败，请查看日志'}}</div>
+        </el-form-item>
         <tooltip-form-item label="规则同步URL" tooltip="解析源站的规则文件URL，支持网络链接和本地路径">
           <el-input :size="formSize" v-model="config.ruleUrl" :placeholder="defaultConfig.ruleUrl"></el-input>
         </tooltip-form-item>
-        <el-form-item label="启用HTTP代理">
+        <el-form-item label="启用代理">
           <el-row>
             <el-col :span="3">
               <el-switch v-model="config.proxy"></el-switch>
             </el-col>
-            <el-col :span="20">
-              <el-input :size="formSize" v-model="config.proxyHost" :placeholder="defaultConfig.proxyHost"
-                        class="form-input-center medium-input-width">
-                <template slot="prepend">地址</template>
-              </el-input>
-              <el-input :size="formSize" v-model.number="config.proxyPort" :placeholder="defaultConfig.proxyPort"
-                        type="number"
-                        class="form-input-center small-input-width input-append">
-                <template slot="prepend">端口</template>
-              </el-input>
-              <el-button :size="formSize" @click="handleCheckProxy" class="input-append" :loading="checkProxyLoading">
-                测试连接
-              </el-button>
+            <el-col :span="10">
+              <el-radio-group v-model="config.proxyType">
+                <el-radio label="http">HTTP</el-radio>
+                <el-radio label="socks5" disabled>Socks5</el-radio>
+              </el-radio-group>
             </el-col>
           </el-row>
+          <div>
+            <el-input :size="formSize" v-model="config.proxyHost" :placeholder="defaultConfig.proxyHost"
+                      class="form-input-center medium-input-width">
+              <template slot="prepend">地址</template>
+            </el-input>
+            <el-input :size="formSize" v-model.number="config.proxyPort" :placeholder="defaultConfig.proxyPort"
+                      type="number"
+                      class="form-input-center small-input-width input-append">
+              <template slot="prepend">端口</template>
+            </el-input>
+            <el-button :size="formSize" @click="handleCheckProxy" class="input-append" :loading="checkProxyLoading">
+              测试连接
+            </el-button>
+          </div>
           <el-input v-show="checkProxyInfo" type="textarea"
                     v-model="checkProxyInfo"
                     disabled
@@ -128,14 +141,14 @@
       },
       handleCheckProxy () {
         this.checkProxyLoading = true
-        ipcRenderer.send('get-network-info', this.config.proxy)
+        ipcRenderer.send('get-network-info', this.config)
       }
     },
     created () {
       // 测试代理的监听
       ipcRenderer.on('on-get-network-info', (event, {info, test, time}) => {
         this.checkProxyLoading = false
-        this.checkProxyInfo = (test ? `连接正常 ${time}ms` : '连接失败，请检查地址端口是否正确') + `\n\n${info.trim()}`
+        this.checkProxyInfo = (test ? `连接正常 ${time}ms` : '连接失败，请检查地址端口是否正确') + (info ? `\n\n${info.trim()}` : '')
       })
     }
   }
@@ -193,4 +206,21 @@
     }
   }
 
+  .config-item-title {
+    font-size: 20px;
+    font-weight: bolder;
+    color: $--color-text-primary;
+  }
+
+  .server-status-error {
+    color: $--color-danger;
+  }
+
+  .server-status-success {
+    color: $--color-success
+  }
+
+  .server-status-success-value {
+    margin-left: 15px;
+  }
 </style>

@@ -4,20 +4,25 @@ const logger = require('./logger')
 const path = require('path')
 const {ipcMain, app} = require('electron')
 const request = require('request-promise-native')
-const {reload, start, getProxyNetworkInfo} = require('./api')
+const {reload, start, isStarting, getProxyNetworkInfo, getServerInfo} = require('./api')
 const {defaultConfig, extractConfigVariable, getConfig} = require('./process-config')
+const is = require('electron-is')
 const Store = require('electron-store')
 const store = new Store()
 
 async function registerServer () {
-  const configVariable = store.get('config_variable')
-  const newConfig = getConfig(configVariable)
-  configVariable ? console.info('使用自定义配置加载服务', configVariable, newConfig) : console.info('使用默认配置加载服务', configVariable, newConfig)
-  const {port, ip, local, message} = await start(newConfig, false)
-  if (message) {
-    console.error(message)
+  if (isStarting()) {
+    console.info('服务已启动')
   } else {
-    console.info(`启动成功，本地访问 http://${local}:${port}，IP访问 http://${ip}:${port}`)
+    const configVariable = store.get('config_variable')
+    const newConfig = getConfig(configVariable)
+    configVariable ? console.info('使用自定义配置加载服务', configVariable, newConfig) : console.info('使用默认配置加载服务', configVariable, newConfig)
+    const {port, ip, local, message} = await start(newConfig, false)
+    if (message) {
+      console.error(message)
+    } else {
+      console.info(`启动成功，本地访问 http://${local}:${port}，IP访问 http://${ip}:${port}`)
+    }
   }
 }
 
@@ -72,6 +77,9 @@ function registerIPC (mainWindow) {
    * 检查更新
    */
   ipcMain.on('check-update', async (event) => {
+    if (is.dev()) {
+      return
+    }
     try {
       const response = await request({
         url: defaultConfig().checkUpdateURL,
@@ -96,15 +104,16 @@ function registerIPC (mainWindow) {
    */
   ipcMain.on('get-app-info', (event) => {
     event.returnValue = {
-      logDir: path.resolve(logger.transports.file.file, '..')
+      logDir: path.resolve(logger.transports.file.file, '..'),
+      server: getServerInfo()
     }
   })
 
   /**
    * 获取网络信息
    */
-  ipcMain.on('get-network-info', async (event, proxy) => {
-    event.sender.send('on-get-network-info', await getProxyNetworkInfo(proxy))
+  ipcMain.on('get-network-info', async (event, config) => {
+    event.sender.send('on-get-network-info', await getProxyNetworkInfo(config))
   })
 }
 

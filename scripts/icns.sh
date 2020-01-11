@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-# brew install icoutils
 filepath=256x256.png
 iconset=.icns.iconset
 

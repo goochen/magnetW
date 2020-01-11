@@ -1,6 +1,5 @@
 const Koa = require('koa')
 const Router = require('koa-router')
-const koaStatic = require('koa-static')
 const app = new Koa()
 const prefix = '/api'
 const router = new Router({prefix})
@@ -26,9 +25,10 @@ router.get('/load-rule', async (ctx) => {
 router.get('/search', async (ctx) => {
   if (ctx.query.keyword) {
     const current = repo.makeupSearchOption(ctx.query)
-    const items = await repo.obtainSearchResult(current, ctx.headers)
+    const {originalCount, items} = await repo.obtainSearchResult(current, ctx.headers)
     ctx.success({
       current,
+      originalCount,
       items
     })
 
@@ -81,11 +81,11 @@ async function reload (config, preload) {
 
 async function start (config, preload) {
   try {
-    const port = process.env.PORT || 9000
-    koaServer = app.listen(port)
-
+    const port = config.port
+    koaServer = await app.listen(port)
+    const address = koaServer.address()
     serverInfo = {
-      port,
+      port: address.port,
       ip: getIPAddress(),
       local: 'localhost'
     }
